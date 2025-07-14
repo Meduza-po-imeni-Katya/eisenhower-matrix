@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренажер матрицы Эйзенхауэра</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            background: linear-gradient(90deg, #1a2a6c, #b21f1f);
+            color: white;
+            margin: -20px -20px 20px;
+            border-radius: 20px 20px 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 Q50,20 100,0 L100,100 Q50,80 0,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+            background-size: cover;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .timer-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .timer {
+            font-size: 32px;
+            font-weight: 700;
+            color: #b21f1f;
+            background: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .start-btn {
+            background: linear-gradient(90deg, #1a2a6c, #2c3e50);
+            color: white;
+            margin: 20px auto;
+            display: block;
+            font-size: 18px;
+            padding: 15px 30px;
+        }
+        
+        .finish-btn {
+            background: linear-gradient(90deg, #1a2a6c, #2c3e50);
+            color: white;
+        }
+        
+        .show-results-btn {
+            background: linear-gradient(90deg, #b21f1f, #c0392b);
+            color: white;
+        }
+        
+        .matrix-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .quadrant {
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .important-urgent {
+            background: linear-gradient(135deg, #e53935, #b71c1c);
+        }
+        
+        .important-not-urgent {
+            background: linear-gradient(135deg, #43a047, #2e7d32);
+        }
+        
+        .not-important-urgent {
+            background: linear-gradient(135deg, #1e88e5, #0d47a1);
+        }
+        
+        .not-important-not-urgent {
+            background: linear-gradient(135deg, #757575, #424242);
+        }
+        
+        .task-list {
+            margin-bottom: 20px;
+            max-height: 50vh;
+            overflow-y: auto;
+            padding-right: 5px;
+            display: none;
+        }
+        
+        .task-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .task-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .task-list::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        
+        .task-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        .task {
+            background: white;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border-left: 8px solid #ddd;
+        }
+        
+        .task:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .task.selected {
+            border-left: 8px solid #ff9800;
+        }
+        
+        .task-number {
+            font-weight: 700;
+            margin-right: 10px;
+            background: #eee;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .task-text {
+            display: inline;
+        }
+        
+        .category-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #eee;
+        }
+        
+        .category-btn {
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            opacity: 0.9;
+        }
+        
+        .category-btn:hover {
+            opacity: 1;
+            transform: scale(1.03);
+        }
+        
+        .intro-section {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .results-section {
+            display: none;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        .results-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            width: 45%;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .task-result {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 15px;
+            background: #f9f9f9;
+            border-left: 8px solid #ddd;
+        }
+        
+        .correct {
+            border-left-color: #4CAF50;
+        }
+        
+        .incorrect {
+            border-left-color: #F44336;
+        }
+        
+        .user-choice {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 5px;
+            color: white;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        
+        .correct-choice {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 5px;
+            color: white;
+            font-size: 14px;
+            margin: 5px 0;
+            background: #4CAF50;
+        }
+        
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 8px;
+            font-size: 14px;
+            border-left: 3px solid #ff9800;
+        }
+        
+        @media (max-width: 600px) {
+            .matrix-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .category-selector {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+            
+            .stat-card {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Матрица Эйзенхауэра</h1>
+            <p class="subtitle">Тренажер сортировки задач по приоритетам</p>
+        </header>
+        
+        <div class="intro-section" id="intro-section">
+            <h2>Упражнение по сортировке задач</h2>
+            <p>Вам будет представлен список задач, которые нужно распределить по квадрантам матрицы Эйзенхауэра.</p>
+            <p>На выполнение задания даётся 10 минут. Постарайтесь работать быстро и точно.</p>
+            <button class="start-btn" id="start-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+                Начать упражнение
+            </button>
+        </div>
+        
+        <div class="timer-section" id="timer-section" style="display: none;">
+            <div class="timer" id="timer">10:00</div>
+            <div class="controls">
+                <button class="finish-btn" id="finish-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    Завершить
+                </button>
+                <button class="show-results-btn" id="show-results-btn" style="display: none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                    </svg>
+                    Результаты
+                </button>
+            </div>
+        </div>
+        
+        <div class="matrix-info" id="matrix-info" style="display: none;">
+            <div class="quadrant important-urgent">
+                I. Важно и срочно
+            </div>
+            <div class="quadrant important-not-urgent">
+                II. Важно, но не срочно
+            </div>
+            <div class="quadrant not-important-urgent">
+                III. Не важно, но срочно
+            </div>
+            <div class="quadrant not-important-not-urgent">
+                IV. Не важно и не срочно
+            </div>
+        </div>
+        
+        <div class="task-list" id="task-list">
+            <!-- Задачи будут добавляться с помощью JavaScript -->
+        </div>
+        
+        <div class="results-section" id="results-section">
+            <div class="results-header">
+                <h2>Результаты упражнения</h2>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card" style="background: linear-gradient(135deg, #4CAF50, #2E7D32);">
+                    <h3>Правильно</h3>
+                    <div class="stat-value" id="correct-count">0</div>
+                    <p>задач</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #F44336, #C62828);">
+                    <h3>Неправильно</h3>
+                    <div class="stat-value" id="incorrect-count">0</div>
+                    <p>задач</p>
+                </div>
+            </div>
+            
+            <div id="task-results">
+                <!-- Результаты по задачам будут добавляться с помощью JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Данные задач с правильной категорией и пояснениями
+        const tasks = [
+            // I. Важно и срочно
+            { id: 1, text: "Подготовить отчёт по итогам месяца до конца дня", correctCategory: "important-urgent", explanation: "Срочный дедлайн делает эту задачу важной и срочной" },
+            { id: 2, text: "Срочно заменить отсутствующего коллегу на созвоне с региональным офисом", correctCategory: "important-urgent", explanation: "Срочность и важность участия в ключевом созвоне" },
+            { id: 3, text: "Ответить на запрос от проверяющей инстанции (срок — сегодня)", correctCategory: "important-urgent", explanation: "Юридические/проверочные запросы с дедлайном требуют немедленного внимания" },
+            { id: 4, text: "Передать корректные данные для начисления зарплаты (дедлайн через 2 часа)", correctCategory: "important-urgent", explanation: "Последствия ошибки в зарплате критичны, дедлайн близок" },
+            { id: 5, text: "Срочно согласовать изменение бюджета проекта до конца рабочего дня", correctCategory: "important-urgent", explanation: "Влияет на текущий проект, срок ограничен" },
+            { id: 6, text: "Уточнить и перепроверить ошибочные данные в отправленном письме клиентскому отделу", correctCategory: "important-urgent", explanation: "Исправление ошибки предотвращает проблемы с клиентами" },
+            { id: 7, text: "Устранить ошибку в базе данных партнёров (влияющая на внутреннюю отчётность)", correctCategory: "important-urgent", explanation: "Ошибка влияет на отчётность и требует немедленного исправления" },
+            { id: 8, text: "Подготовить документы для внутреннего аудита (аудитор уже на месте)", correctCategory: "important-urgent", explanation: "Аудит уже начался, документы нужны немедленно" },
+            { id: 9, text: "Согласовать график отпуска сотрудника, уходящего через 2 дня", correctCategory: "important-urgent", explanation: "Сотрудник скоро уходит, вопрос требует быстрого решения" },
+            { id: 10, text: "Завершить оформление заявки на закупку, чтобы не сорвался тендер", correctCategory: "important-urgent", explanation: "Пропуск дедлайна сорвёт важный тендер" },
+            
+            // Обманки I
+            { id: 11, text: "Ответить на сообщение в рабочем чате с пометкой 'важно', но без дедлайна", correctCategory: "important-not-urgent", explanation: "Сообщение помечено как важное, но отсутствие дедлайна означает, что задача не срочная" },
+            { id: 12, text: "Прочитать новость на внутреннем портале о грядущих изменениях в политике компании", correctCategory: "important-not-urgent", explanation: "Информация важна для понимания будущих изменений, но не требует немедленных действий" },
+            
+            // II. Важно, но не срочно
+            { id: 13, text: "Запланировать встречу с руководителем для обсуждения годовых целей", correctCategory: "important-not-urgent", explanation: "Важно для развития, но не имеет срочности" },
+            { id: 14, text: "Разработать шаблон нового отчёта, чтобы упростить будущие задачи", correctCategory: "important-not-urgent", explanation: "Инвестиция времени для экономии времени в будущем" },
+            { id: 15, text: "Пройти обучение по новому регламенту работы с подрядчиками", correctCategory: "important-not-urgent", explanation: "Повышение квалификации важно, но не требует немедленного выполнения" },
+            { id: 16, text: "Провести ретроспективу завершённого проекта", correctCategory: "important-not-urgent", explanation: "Анализ опыта важен для улучшения будущих проектов" },
+            { id: 17, text: "Создать гайд для новых сотрудников отдела", correctCategory: "important-not-urgent", explanation: "Улучшение процессов адаптации, не срочно" },
+            { id: 18, text: "Подготовить предложения по оптимизации внутренней отчётности", correctCategory: "important-not-urgent", explanation: "Улучшение процессов, но не срочно" },
+            { id: 19, text: "Внедрить регулярные встречи по улучшению командного взаимодействия", correctCategory: "important-not-urgent", explanation: "Важно для команды, но может быть запланировано" },
+            { id: 20, text: "Актуализировать свою рабочую инструкцию", correctCategory: "important-not-urgent", explanation: "Полезно, но не требует немедленного выполнения" },
+            { id: 21, text: "Собрать фидбек по своей работе за квартал", correctCategory: "important-not-urgent", explanation: "Важно для развития, но не срочно" },
+            { id: 22, text: "Разработать план карьерного развития на ближайшие полгода", correctCategory: "important-not-urgent", explanation: "Инвестиция в своё развитие, не срочно" },
+            
+            // Обманки II
+            { id: 23, text: "Прочитать статью «7 привычек успешных людей» в рабочее время", correctCategory: "not-important-not-urgent", explanation: "Саморазвитие важно, но эта конкретная статья не критична и может быть отложена" },
+            { id: 24, text: "Поискать вдохновляющие цитаты для оформления офиса", correctCategory: "not-important-not-urgent", explanation: "Не влияет на основные рабочие процессы" },
+            
+            // III. Не важно, но срочно
+            { id: 25, text: "Срочно отправить копию справки в отдел кадров по их запросу", correctCategory: "not-important-urgent", explanation: "Срочно, но не влияет на основные цели" },
+            { id: 26, text: "Найти и переслать архивный файл коллеге из другого отдела", correctCategory: "not-important-urgent", explanation: "Срочно, но не ваше основное обязательство" },
+            { id: 27, text: "Ответить на письмо с вопросом «а где найти тот файл» от новичка", correctCategory: "not-important-urgent", explanation: "Срочно, но может быть делегировано или выполнено позже" },
+            { id: 28, text: "Подтвердить участие в вебинаре, на который вас записали", correctCategory: "not-important-urgent", explanation: "Срочно, но не влияет на ваши основные задачи" },
+            { id: 29, text: "Подготовить распечатки для совещания (хотя есть проектор)", correctCategory: "not-important-urgent", explanation: "Срочно, но неэффективное использование времени" },
+            { id: 30, text: "Срочно заменить коллегу на внутренней презентации, не связанной с вашим проектом", correctCategory: "not-important-urgent", explanation: "Срочно, но не входит в ваши обязанности" },
+            { id: 31, text: "Помочь заполнить заявку в новом сервисе (вы не эксперт, но «разбираешься»)", correctCategory: "not-important-urgent", explanation: "Срочно, но может быть выполнено кем-то другим" },
+            { id: 32, text: "Отчитаться по инициативе, в которой участвовали минимально", correctCategory: "not-important-urgent", explanation: "Срочно, но незначительный вклад" },
+            { id: 33, text: "Срочно предоставить фотографию для внутреннего портала", correctCategory: "not-important-urgent", explanation: "Срочно, но не влияет на рабочие результаты" },
+            { id: 34, text: "Ответить на звонок «по вопросу, который лучше обсудить на почте»", correctCategory: "not-important-urgent", explanation: "Срочно, но неэффективное использование времени" },
+            
+            // Обманки III
+            { id: 35, text: "«Срочно» прийти в переговорку, где «вроде бы вы нужны» — а на месте окажется, что нет", correctCategory: "not-important-not-urgent", explanation: "Мнимая срочность, часто оказывается неважным" },
+            { id: 36, text: "Участие в совещании без повестки, потому что «так надо»", correctCategory: "not-important-not-urgent", explanation: "Отсутствие повестки указывает на низкую важность" },
+            
+            // IV. Не важно и не срочно
+            { id: 37, text: "Проверить новую рассылку от службы охраны труда", correctCategory: "not-important-not-urgent", explanation: "Не требует немедленного внимания и не критично" },
+            { id: 38, text: "Обсудить с коллегой слухи о реорганизации", correctCategory: "not-important-not-urgent", explanation: "Сплетни не способствуют продуктивности" },
+            { id: 39, text: "Обновить обои на рабочем столе", correctCategory: "not-important-not-urgent", explanation: "Не влияет на рабочие результаты" },
+            { id: 40, text: "Переписать заголовки в презентации, которая уже утверждена", correctCategory: "not-important-not-urgent", explanation: "Перфекционизм без необходимости" },
+            { id: 41, text: "Просмотреть видеоролик «мотивационного характера»", correctCategory: "not-important-not-urgent", explanation: "Не обязательное к просмотру" },
+            { id: 42, text: "Подсчитать, сколько осталось до отпуска, и записать в блокнот", correctCategory: "not-important-not-urgent", explanation: "Не влияет на рабочие процессы" },
+            { id: 43, text: "Обсудить в чатике, что будет на корпоративе", correctCategory: "not-important-not-urgent", explanation: "Не срочно и не важно для рабочих задач" },
+            { id: 44, text: "Перечитать переписку недельной давности «на всякий случай»", correctCategory: "not-important-not-urgent", explanation: "Без конкретной цели - пустая трата времени" },
+            { id: 45, text: "Искать идеальный шрифт для нового драфта, хотя текущий — стандартный", correctCategory: "not-important-not-urgent", explanation: "Перфекционизм на ранней стадии" },
+            { id: 46, text: "Устроить ревизию старых файлов «на будущее»", correctCategory: "not-important-not-urgent", explanation: "Архивация без конкретной цели" },
+            
+            // Обманки IV
+            { id: 47, text: "Писать длинное письмо с рассуждениями о командном духе без конкретных выводов", correctCategory: "not-important-not-urgent", explanation: "Без конкретных действий - пустая трата времени" },
+            { id: 48, text: "Составлять список идей «на будущее», не привязанный ни к одной задаче", correctCategory: "not-important-not-urgent", explanation: "Без конкретного плана реализации" }
+        ];
+
+        // Перемешиваем задачи
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        const shuffledTasks = shuffleArray([...tasks]);
+        let userSelections = {};
+        let timer;
+        let timeLeft = 10 * 60; // 10 минут в секундах
+        let exerciseCompleted = false;
+
+        // Инициализация приложения
+        function initApp() {
+            renderTasks();
+            setupEventListeners();
+        }
+
+        // Отображение задач
+        function renderTasks() {
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+            
+            shuffledTasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task';
+                taskElement.dataset.id = task.id;
+                taskElement.innerHTML = `
+                    <div class="task-number">${task.id}</div>
+                    <div class="task-text">${task.text}</div>
+                    <div class="category-selector" style="display: none;">
+                        <div class="category-btn important-urgent" data-category="important-urgent">I. Важно и срочно</div>
+                        <div class="category-btn important-not-urgent" data-category="important-not-urgent">II. Важно, не срочно</div>
+                        <div class="category-btn not-important-urgent" data-category="not-important-urgent">III. Не важно, срочно</div>
+                        <div class="category-btn not-important-not-urgent" data-category="not-important-not-urgent">IV. Не важно, не срочно</div>
+                    </div>
+                `;
+                taskList.appendChild(taskElement);
+                
+                // Применяем выбранную категорию, если она есть
+                if (userSelections[task.id]) {
+                    applyCategorySelection(taskElement, userSelections[task.id]);
+                }
+            });
+        }
+
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            // Кнопка начала упражнения
+            document.getElementById('start-btn').addEventListener('click', startExercise);
+            
+            // Обработчики для задач
+            document.querySelectorAll('.task').forEach(task => {
+                task.addEventListener('click', function(e) {
+                    if (exerciseCompleted) return;
+                    
+                    const categorySelector = this.querySelector('.category-selector');
+                    const isVisible = categorySelector.style.display === 'grid';
+                    
+                    // Скрываем все открытые селекторы
+                    document.querySelectorAll('.category-selector').forEach(selector => {
+                        selector.style.display = 'none';
+                    });
+                    
+                    // Показываем текущий, если он был скрыт
+                    if (!isVisible) {
+                        categorySelector.style.display = 'grid';
+                        this.classList.add('selected');
+                    } else {
+                        this.classList.remove('selected');
+                    }
+                    
+                    // Обработчики для кнопок категорий
+                    categorySelector.querySelectorAll('.category-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const taskId = task.dataset.id;
+                            const category = this.dataset.category;
+                            userSelections[taskId] = category;
+                            applyCategorySelection(task, category);
+                            categorySelector.style.display = 'none';
+                            task.classList.remove('selected');
+                        });
+                    });
+                });
+            });
+            
+            // Кнопка завершения
+            document.getElementById('finish-btn').addEventListener('click', finishExercise);
+            
+            // Кнопка показа результатов
+            document.getElementById('show-results-btn').addEventListener('click', showResults);
+        }
+
+        // Начало упражнения
+        function startExercise() {
+            document.getElementById('intro-section').style.display = 'none';
+            document.getElementById('timer-section').style.display = 'flex';
+            document.getElementById('matrix-info').style.display = 'grid';
+            document.getElementById('task-list').style.display = 'block';
+            
+            startTimer();
+        }
+
+        // Применение выбранной категории
+        function applyCategorySelection(taskElement, category) {
+            // Удаляем предыдущие стили категорий
+            const classes = ['important-urgent', 'important-not-urgent', 
+                            'not-important-urgent', 'not-important-not-urgent'];
+            classes.forEach(cls => {
+                taskElement.classList.remove(cls);
+            });
+            
+            // Применяем новую категорию
+            taskElement.classList.add(category);
+            taskElement.style.borderLeft = `8px solid ${getCategoryColor(category)}`;
+        }
+
+        // Получение цвета для категории
+        function getCategoryColor(category) {
+            switch(category) {
+                case 'important-urgent': return '#e53935';
+                case 'important-not-urgent': return '#43a047';
+                case 'not-important-urgent': return '#1e88e5';
+                case 'not-important-not-urgent': return '#757575';
+                default: return '#ddd';
+            }
+        }
+
+        // Таймер
+        function startTimer() {
+            updateTimerDisplay();
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    finishExercise();
+                }
+            }, 1000);
+        }
+
+        // Обновление отображения таймера
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Меняем цвет при малом времени
+            if (timeLeft < 60) {
+                document.getElementById('timer').style.color = '#e53935';
+                document.getElementById('timer').style.animation = 'pulse 1s infinite';
+            }
+        }
+
+        // Завершение упражнения
+        function finishExercise() {
+            if (exerciseCompleted) return;
+            
+            exerciseCompleted = true;
+            clearInterval(timer);
+            
+            // Блокируем задачи
+            document.querySelectorAll('.task').forEach(task => {
+                task.style.opacity = '0.7';
+                task.style.cursor = 'not-allowed';
+            });
+            
+            // Показываем кнопку результатов
+            document.getElementById('show-results-btn').style.display = 'block';
+            document.getElementById('finish-btn').style.display = 'none';
+        }
+
+        // Показать результаты
+        function showResults() {
+            const resultsSection = document.getElementById('results-section');
+            const taskResults = document.getElementById('task-results');
+            resultsSection.style.display = 'block';
+            
+            // Скрываем основной интерфейс
+            document.querySelector('.timer-section').style.display = 'none';
+            document.querySelector('.matrix-info').style.display = 'none';
+            document.getElementById('task-list').style.display = 'none';
+            document.getElementById('show-results-btn').style.display = 'none';
+            
+            // Считаем результаты
+            let correctCount = 0;
+            let incorrectCount = 0;
+            
+            taskResults.innerHTML = '';
+            
+            shuffledTasks.forEach(task => {
+                const userCategory = userSelections[task.id];
+                const isCorrect = userCategory === task.correctCategory;
+                
+                if (isCorrect) correctCount++;
+                else incorrectCount++;
+                
+                const resultElement = document.createElement('div');
+                resultElement.className = `task-result ${isCorrect ? 'correct' : 'incorrect'}`;
+                resultElement.innerHTML = `
+                    <div class="task-number">${task.id}</div>
+                    <div class="task-text">${task.text}</div>
+                    ${userCategory ? 
+                        `<div class="user-choice" style="background: ${getCategoryColor(userCategory)};">
+                            Ваш выбор: ${getCategoryName(userCategory)}
+                        </div>` : 
+                        '<div class="user-choice" style="background: #9e9e9e;">Не выбрано</div>'
+                    }
+                    <div class="correct-choice" style="background: ${getCategoryColor(task.correctCategory)};">
+                        Правильно: ${getCategoryName(task.correctCategory)}
+                    </div>
+                    <div class="explanation">${task.explanation}</div>
+                `;
+                taskResults.appendChild(resultElement);
+            });
+            
+            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('incorrect-count').textContent = incorrectCount;
+            
+            // Прокрутка к результатам
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Получение названия категории
+        function getCategoryName(category) {
+            switch(category) {
+                case 'important-urgent': return 'I. Важно и срочно';
+                case 'important-not-urgent': return 'II. Важно, не срочно';
+                case 'not-important-urgent': return 'III. Не важно, срочно';
+                case 'not-important-not-urgent': return 'IV. Не важно, не срочно';
+                default: return '';
+            }
+        }
+
+        // Запуск приложения после загрузки страницы
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
